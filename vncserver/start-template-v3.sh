@@ -375,6 +375,71 @@ elif [[ "${service_vnc_type}" == "KasmVNC" ]]; then
     ###########
     # KasmVNC #
     ###########
+
+    # ── KasmVNC OpenSSL 3.5.x pre-flight fixes (EIB) ──────────────────────
+    # OpenSSL >= 3.5.x on EL9 triggers three KasmVNC defects:
+    #   1. SSL cert with CA:TRUE rejected (strict validation)
+    #   2. WebUDP null-pointer crash when cert fails
+    #   3. JS client defaults WebRTC=true, triggering the crash
+    # These inline fixes are idempotent and run before vncserver starts.
+    # Reference: KasmVNC-SSL-Certificate-Failure-on-EL9-OpenSSL-3.md
+    # ─────────────────────────────────────────────────────────────────────
+    echo "$(date): Applying KasmVNC OpenSSL pre-flight fixes..."
+
+    # Fix 1: Regenerate SSL cert with CA:FALSE if needed
+    KASM_CERT="/etc/pki/tls/private/kasmvnc.pem"
+    if [ -f "${KASM_CERT}" ]; then
+        cert_ca=$(openssl x509 -in "${KASM_CERT}" -noout -text 2>/dev/null | grep -c "CA:TRUE" || true)
+        if [ "${cert_ca}" -gt 0 ]; then
+            echo "$(date): Regenerating KasmVNC SSL cert (CA:TRUE -> CA:FALSE)..."
+            sudo openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
+                -keyout "${KASM_CERT}" -out "${KASM_CERT}" \
+                -subj "/C=US/ST=VA/L=None/O=NOAA-EMC/OU=EIB/CN=kasm/emailAddress=none@none.none" \
+                -addext "basicConstraints=critical,CA:FALSE" \
+                -addext "keyUsage=digitalSignature,keyEncipherment" \
+                -addext "extendedKeyUsage=serverAuth" 2>/dev/null
+            sudo chmod 640 "${KASM_CERT}"
+            sudo chgrp kasmvnc-cert "${KASM_CERT}" 2>/dev/null || true
+            echo "$(date): [OK] SSL cert regenerated"
+        else
+            echo "$(date): [OK] SSL cert already has CA:FALSE"
+        fi
+    fi
+
+    # Fix 2: Disable WebRTC in KasmVNC JS client (prevents null-pointer crash)
+    SCREEN_BUNDLE="/usr/share/kasmvnc/www/screen.bundle.js"
+    if [ -f "${SCREEN_BUNDLE}" ]; then
+        if grep -q 'enableWebRTC:!0' "${SCREEN_BUNDLE}" 2>/dev/null; then
+            echo "$(date): Patching screen.bundle.js (WebRTC -> disabled)..."
+            sudo sed -i 's/enableWebRTC:!0/enableWebRTC:!1/g' "${SCREEN_BUNDLE}"
+            echo "$(date): [OK] WebRTC disabled in screen.bundle.js"
+        else
+            echo "$(date): [OK] WebRTC already disabled in screen.bundle.js"
+        fi
+    fi
+    # Also patch any ui-*.js files
+    for uijs in /usr/share/kasmvnc/www/ui-*.js; do
+        [ -f "${uijs}" ] || continue
+        if grep -q 'enableWebRTC:!0' "${uijs}" 2>/dev/null; then
+            sudo sed -i 's/enableWebRTC:!0/enableWebRTC:!1/g' "${uijs}"
+            echo "$(date): [OK] WebRTC disabled in $(basename ${uijs})"
+        fi
+    done
+
+    # Fix 3: Disable NVIDIA EGL library (prevents GlxExtensionInit segfault)
+    NVIDIA_EGL="/usr/lib64/libnvidia-egl-gbm.so.1"
+    if [ -L "${NVIDIA_EGL}" ] || [ -f "${NVIDIA_EGL}" ]; then
+        if [ ! -e "${NVIDIA_EGL}.disabled" ]; then
+            sudo mv "${NVIDIA_EGL}" "${NVIDIA_EGL}.disabled" 2>/dev/null || true
+            echo "$(date): [OK] NVIDIA EGL library disabled"
+        else
+            echo "$(date): [OK] NVIDIA EGL library already disabled"
+        fi
+    fi
+
+    echo "$(date): KasmVNC pre-flight fixes complete."
+    # ─────────────────────────────────────────────────────────────────────
+
     export kasmvnc_port=$(pw agent open-port)
     export XDG_RUNTIME_DIR=""
 

@@ -13,7 +13,7 @@ jobs:
         - name: Checkout
           uses: parallelworks/checkout
           with:
-            repo: https://github.com/parallelworks/interactive_session.git
+            repo: https://github.com/TerrenceMcGuinness-NOAA/interactive_session.git
             branch: main
             sparse_checkout:
               - ${{ inputs.service.name }}
@@ -68,7 +68,7 @@ jobs:
             echo "partition=${{ inputs.cluster.slurm.partition_tag_cloud }}" | tee -a $OUTPUTS
           fi
 
-      - uses: github/parallelworks/interactive_session@main
+      - uses: github/TerrenceMcGuinness-NOAA/interactive_session@main
         early-cancel: any-job-failed
         with:
           $yaml: workflow/session_runner/v1.4/noaa.yaml
