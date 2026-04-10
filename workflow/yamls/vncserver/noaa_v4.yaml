@@ -8,7 +8,7 @@ sessions:
 jobs:
   preprocessing:
       ssh:
-        remoteHost: 100.30.187.35
+        remoteHost: 3.81.248.189
       steps:
         - name: Checkout
           uses: parallelworks/checkout
@@ -56,7 +56,7 @@ jobs:
     needs:
       - preprocessing
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Get Partition
         run: |

@@ -3,7 +3,7 @@ jobs:
   stream_output:
     working-directory: ${{ inputs.rundir }}
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Stream Output
         early-cancel: any-job-failed
@@ -13,7 +13,7 @@ jobs:
   preprocessing:
     working-directory: ${{ inputs.rundir }}
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Create Script Template
         run: |
@@ -99,7 +99,7 @@ jobs:
     if: ${{ inputs.slurm.is_enabled != true && inputs.pbs.is_enabled != true && inputs.use_scheduler_agent != true }}
     working-directory: ${{ inputs.rundir }}
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Create Script
         run: |
@@ -144,7 +144,7 @@ jobs:
     if: ${{ inputs.pbs.is_enabled == true && inputs.use_scheduler_agent != true }}
     working-directory: ${{ inputs.rundir }}
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Create PBS Script
         run: |
@@ -230,7 +230,7 @@ jobs:
     if: ${{ inputs.slurm.is_enabled == true && inputs.use_scheduler_agent != true }}
     working-directory: ${{ inputs.rundir }}
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Create SLURM Script
         run: |
@@ -316,7 +316,7 @@ jobs:
     if: ${{ inputs.use_scheduler_agent == true }}
     working-directory: ${{ inputs.rundir }}
     ssh:
-      remoteHost: 100.30.187.35
+      remoteHost: 3.81.248.189
     steps:
       - name: Create Script
         run: |
@@ -338,7 +338,7 @@ jobs:
           agentId: ${{ needs.scheduler_agent_job.steps.slurmstep.outputs.agentId }}
       - name: Run Script
         ssh:
-          jumpNodeHost: 100.30.187.35
+          jumpNodeHost: 3.81.248.189
           remoteHost: ${{ needs.scheduler_agent_job.steps.waitstep.outputs.remoteHost }}:${{ needs.scheduler_agent_job.steps.waitstep.outputs.sshPort }}
         run: |
           set -x
