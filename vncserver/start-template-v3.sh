@@ -440,7 +440,8 @@ elif [[ "${service_vnc_type}" == "KasmVNC" ]]; then
     echo "$(date): KasmVNC pre-flight fixes complete."
     # ─────────────────────────────────────────────────────────────────────
 
-    export kasmvnc_port=$(pw agent open-port)
+    # Use service_port directly — skip nginx proxy, KasmVNC serves plain HTTP
+    export kasmvnc_port=${service_port}
     export XDG_RUNTIME_DIR=""
 
     if [ "${service_set_password}" != true ]; then
@@ -564,6 +565,7 @@ fi
 sudo chmod +x /usr/lib/kasmvncserver/select-de.sh
     vncserver_cmd="${service_vnc_exec} ${DISPLAY} ${disableBasicAuth} \
         ${desktop_arg} \
+        -sslOnly 0 \
         -websocketPort ${kasmvnc_port} \
         -rfbport ${displayPort}"
 
@@ -601,6 +603,8 @@ sudo chmod +x /usr/lib/kasmvncserver/select-de.sh
     # START NGINX WRAPPER #
     #######################
 
+    # Skip nginx proxy — KasmVNC serves plain HTTP directly on service_port
+    if false; then
     proxy_port=${kasmvnc_port}
     proxy_host="127.0.0.1"
     if which docker >/dev/null 2>&1 && [[ "${service_rootless_docker}" == "true" ]]; then
@@ -738,6 +742,7 @@ HERE
         echo "$(date) ERROR: Need Docker or Singularity to start NGINX proxy"
         exit 1
     fi
+    fi # end: skip nginx proxy
 fi
 
 
