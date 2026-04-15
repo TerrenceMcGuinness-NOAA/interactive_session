@@ -5,7 +5,7 @@ jobs:
   preprocessing:
     working-directory: ${{ inputs.service.rundir }}
     ssh:
-      remoteHost: 3.81.248.189
+      remoteHost: 13.217.86.215
     steps:
       - name: Controller Preprocessing
         run: | 
@@ -61,7 +61,7 @@ jobs:
     needs:
       - preprocessing
     ssh:
-      remoteHost: 3.81.248.189
+      remoteHost: 13.217.86.215
     steps:
       - uses: github/TerrenceMcGuinness-NOAA/interactive_session@main
         early-cancel: any-job-failed
@@ -100,7 +100,7 @@ jobs:
     needs:
       - preprocessing
     ssh:
-      remoteHost: 3.81.248.189
+      remoteHost: 13.217.86.215
     steps:
       - name: Wait for job to start
         early-cancel: any-job-failed
@@ -132,7 +132,7 @@ jobs:
       - wait_for_job_start
       - preprocessing
     ssh:
-      remoteHost: 3.81.248.189
+      remoteHost: 13.217.86.215
     steps:
       - name: Get Session Port
         early-cancel: any-job-failed
